@@ -19,7 +19,21 @@ dependencies = [
     "psutil",
 ]
 
+[project.scripts]
+tinyissimo-train = "tinyissimo_yolo.cli.train:main"
+tinyissimo-evaluate = "tinyissimo_yolo.cli.evaluate:main"
+tinyissimo-convert-dataset = "tinyissimo_yolo.cli.convert_dataset:main"
+tinyissimo-train-export = "tinyissimo_yolo.cli.train_export:main"
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = ["pytest>=7"]
+
 [tool.uv]
+package = true
 
 [tool.ruff]
 target-version = "py38"

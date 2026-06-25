@@ -141,6 +141,7 @@ dmypy.json
 runs/
 wandb/
 tests/
+!tests/
 .DS_Store
 
 # Neural Network weights -----------------------------------------------------------------------------------------------
@@ -170,6 +171,7 @@ ultralytics/assets/
 
 exp/
 tests/
+!tests/
 runs/
 results/
 wandb/
