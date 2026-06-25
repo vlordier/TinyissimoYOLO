@@ -2,6 +2,7 @@ import argparse
 
 import tinyissimo_yolo._vendored  # noqa: F401
 from tinyissimo_yolo._constants import (
+    CARPK_DATA_YAML,
     DEFAULT_BATCH_SMALL,
     DEFAULT_EPOCHS_SHORT,
     DEFAULT_IMGSZ,
@@ -17,7 +18,7 @@ log = get_logger(__name__)
 def main() -> None:
     parser = argparse.ArgumentParser(description='Train a TinyissimoYOLO model with tiling')
     parser.add_argument('--tiling-config', default=TILING_CONFIG)
-    parser.add_argument('--data', default='CARPK_tiling.yaml')
+    parser.add_argument('--data', default=CARPK_DATA_YAML)
     parser.add_argument('--model', default=MODEL_YAML_TINYISSIMO)
     parser.add_argument('--imgsz', type=int, default=DEFAULT_IMGSZ)
     parser.add_argument('--epochs', type=int, default=DEFAULT_EPOCHS_SHORT)

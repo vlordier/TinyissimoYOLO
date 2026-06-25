@@ -2,7 +2,7 @@
 name = "tinyissimo-yolo"
 version = "0.1.0"
 description = "TinyissimoYOLO — ultra-lightweight YOLO for edge deployment"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "matplotlib>=3.2.2",
     "opencv-python>=4.6.0",
@@ -17,7 +17,11 @@ dependencies = [
     "pandas>=1.1.4",
     "seaborn>=0.11.0",
     "psutil",
+    "ultralytics",
 ]
+
+[tool.uv.sources]
+ultralytics = { path = "./ultralytics", editable = true }
 
 [project.scripts]
 tinyissimo = "tinyissimo_yolo.__main__:main"
@@ -37,19 +41,30 @@ find = { namespaces = true, where = ["src"] }
 "" = "src"
 
 [dependency-groups]
-dev = ["pytest>=7", "mypy>=1"]
+dev = ["pytest>=7", "mypy>=1", "pytest-cov>=6"]
 
 [tool.pytest.ini_options]
 minversion = "7"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-v --tb=short"
+addopts = "-v --tb=short --cov=src/tinyissimo_yolo --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["src/tinyissimo_yolo"]
+omit = ["*/tests/*", "*/ultralytics/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "if __name__ == .__main__.:",
+    "pragma: no cover",
+    "type: ignore",
+]
 
 [tool.uv]
 package = true
 
 [tool.ruff]
-target-version = "py38"
+target-version = "py39"
 line-length = 120
 exclude = ["ultralytics/"]
 extend-exclude = []

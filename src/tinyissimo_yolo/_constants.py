@@ -54,7 +54,11 @@ SPLIT_URLS: dict[str, str] = {
 # ---------------------------------------------------------------------------
 TILING_CONFIG: str = 'tiling_config.yaml'
 DATASET_YAML: str = 'ultralytics/cfg/datasets/CARPK_tiling.yaml'
+CARPK_DATA_YAML: str = 'CARPK_tiling.yaml'
+COCO_YAML: str = 'coco.yaml'
 MODEL_YAML_TINYISSIMO: str = 'tinyissimo-v1-small.yaml'
+MODEL_YAML_DIR: str = './ultralytics/cfg/models/tinyissimo/tinyissimo-'
+WEIGHTS_TEMPLATE: str = './results/{exp_id}/weights/last.pt'
 
 # ---------------------------------------------------------------------------
 # Training defaults

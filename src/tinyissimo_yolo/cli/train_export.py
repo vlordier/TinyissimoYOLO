@@ -2,12 +2,15 @@ import argparse
 
 import tinyissimo_yolo._vendored  # noqa: F401
 from tinyissimo_yolo._constants import (
+    COCO_YAML,
     DEFAULT_BATCH_LARGE,
     DEFAULT_EPOCHS_LONG,
     DEFAULT_EXP_NAME,
     DEFAULT_IMGSZ,
     DEFAULT_PROJECT,
     DEFAULT_SGD,
+    MODEL_YAML_DIR,
+    WEIGHTS_TEMPLATE,
 )
 from tinyissimo_yolo._logging import get_logger
 
@@ -30,14 +33,10 @@ def main() -> None:
 
     from ultralytics import YOLO
 
-    model = YOLO(
-        f'./results/{args.exp_id}/weights/last.pt'
-        if args.load
-        else f'./ultralytics/cfg/models/tinyissimo/tinyissimo-{args.version}.yaml'
-    )
+    model = YOLO(WEIGHTS_TEMPLATE.format(exp_id=args.exp_id) if args.load else f'{MODEL_YAML_DIR}{args.version}.yaml')
 
     model.train(
-        data='coco.yaml',
+        data=COCO_YAML,
         project=DEFAULT_PROJECT,
         name=DEFAULT_EXP_NAME,
         optimizer=DEFAULT_SGD,
