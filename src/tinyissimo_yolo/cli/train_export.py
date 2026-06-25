@@ -1,6 +1,6 @@
 import argparse
 
-import tinyissimo_yolo._vendored  # noqa: F401  ensure vendored ultralytics is on sys.path
+import tinyissimo_yolo._vendored  # noqa: F401
 from tinyissimo_yolo._constants import (
     DEFAULT_BATCH_LARGE,
     DEFAULT_EPOCHS_LONG,
@@ -14,10 +14,10 @@ from tinyissimo_yolo._logging import get_logger
 log = get_logger(__name__)
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description='Train and export a TinyissimoYOLO model')
     parser.add_argument('--version', default='v8', choices=['v1', 'v8'])
-    parser.add_argument('--load', action='store_true', help='Load existing weights')
+    parser.add_argument('--load', action='store_true')
     parser.add_argument('--exp-id', default=DEFAULT_EXP_NAME)
     parser.add_argument('--img-size', type=int, default=DEFAULT_IMGSZ)
     parser.add_argument('--epochs', type=int, default=DEFAULT_EPOCHS_LONG)
@@ -25,20 +25,16 @@ def main():
     args = parser.parse_args()
 
     if args.version == 'v1':
-        log.error(
-            'Please, check to modify ultralytics/nn/modules/head/Detect '
-            'for TinyissimoYOLOv1.3 small and big change line 36 to: self.reg_max=16'
-        )
+        log.error('Check ultralytics/nn/modules/head/Detect line 36: self.reg_max=16 for TinyissimoYOLOv1.3')
         return
 
     from ultralytics import YOLO
 
-    if args.load:
-        model_name = f'./results/{args.exp_id}/weights/last.pt'
-        model = YOLO(model_name)
-    else:
-        model_name = f'./ultralytics/cfg/models/tinyissimo/tinyissimo-{args.version}.yaml'
-        model = YOLO(model_name)
+    model = YOLO(
+        f'./results/{args.exp_id}/weights/last.pt'
+        if args.load
+        else f'./ultralytics/cfg/models/tinyissimo/tinyissimo-{args.version}.yaml'
+    )
 
     model.train(
         data='coco.yaml',

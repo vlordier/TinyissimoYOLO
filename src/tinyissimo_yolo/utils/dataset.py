@@ -1,6 +1,8 @@
 import os
 import re
+import sys
 import urllib.request
+from typing import Any
 
 import cv2
 
@@ -18,84 +20,85 @@ from tinyissimo_yolo._logging import get_logger
 
 log = get_logger(__name__)
 
-_ANNOT_RE = re.compile(r'\d+ \d+ \d+ \d+ \d+')
+_ANNOT_RE: re.Pattern = re.compile(r'\d+ \d+ \d+ \d+ \d+')
+_HAS_DISPLAY: bool = os.environ.get('DISPLAY') is not None or sys.platform != 'linux'
 
 
-def load_gt_bbox(filepath):
-    """Load CARPK annotation file. Format: <class> <x1> <y1> <x2> <y2> per line."""
+def load_gt_bbox(filepath: str) -> list[dict[str, Any]]:
+    """Load CARPK annotation file.
+
+    Format: ``<class> <x1> <y1> <x2> <y2>`` per line.
+    """
     with open(filepath) as f:
         data = f.read()
     objs = _ANNOT_RE.findall(data)
-    annots = []
+    annots: list[dict[str, Any]] = []
     for obj in objs:
         info = re.findall(r'\d+', obj)
-        # CARPK format: class x1 y1 x2 y2 — skip the class label
         x1 = float(info[1])
         y1 = float(info[2])
         x2 = float(info[3])
         y2 = float(info[4])
         width = x2 - x1
         height = y2 - y1
-        x = x1 + 0.5 * width
-        y = y1 + 0.5 * height
-        instance = {
-            'label': CAR_LABEL,
-            'coordinates': {'x': x, 'y': y, 'width': int(width), 'height': int(height)},
-        }
-        annots.append(instance)
+        annots.append(
+            {
+                'label': CAR_LABEL,
+                'coordinates': {
+                    'x': x1 + 0.5 * width,
+                    'y': y1 + 0.5 * height,
+                    'width': int(width),
+                    'height': int(height),
+                },
+            }
+        )
     return annots
 
 
-def plot_bboxes(image, instances):
-    image_plot = image.copy()
-    for instance in instances:
-        width = instance['coordinates']['width']
-        height = instance['coordinates']['height']
-        x = int(instance['coordinates']['x'] - 0.5 * width)
-        y = int(instance['coordinates']['y'] - 0.5 * height)
-        start_point = (x, y)
-        end_point = (x + width, y + height)
-        cv2.rectangle(image_plot, start_point, end_point, COLOR_RED, RECT_NORMAL)
-
-    cv2.imshow('annotated image', image_plot)
-    cv2.waitKey(0)
+def plot_bboxes(image: cv2.Mat, instances: list[dict[str, Any]]) -> None:
+    """Overlay bounding boxes on *image* and show it (blocks, headless-safe)."""
+    overlay = image.copy()
+    for inst in instances:
+        c = inst['coordinates']
+        x = int(c['x'] - 0.5 * c['width'])
+        y = int(c['y'] - 0.5 * c['height'])
+        cv2.rectangle(overlay, (x, y), (x + c['width'], y + c['height']), COLOR_RED, RECT_NORMAL)
+    if _HAS_DISPLAY:
+        cv2.imshow('annotated image', overlay)
+        cv2.waitKey(0)
 
 
-def convert_carpk_to_create_ml(label_dir, images_dir, debug_plot=False):
-    label_list = []
+def convert_carpk_to_create_ml(label_dir: str, images_dir: str, debug_plot: bool = False) -> list[dict[str, Any]]:
+    """Convert CARPK annotations to CreateML-style label list."""
+    label_list: list[dict[str, Any]] = []
     for image_filename in os.listdir(images_dir):
         if not image_filename.lower().endswith(IMAGE_EXTENSIONS):
             continue
-        base_filename = image_filename.strip().split('.')[0]
-        annot_filename = base_filename + '.txt'
-        annotations = load_gt_bbox(os.path.join(label_dir, annot_filename))
-        image_dict = {
-            'image': image_filename,
-            'annotations': annotations,
-        }
-        label_list.append(image_dict)
-
+        base = image_filename.strip().split('.')[0]
+        annotations = load_gt_bbox(os.path.join(label_dir, base + '.txt'))
+        label_list.append({'image': image_filename, 'annotations': annotations})
         if debug_plot:
             img = cv2.imread(os.path.join(images_dir, image_filename))
-            plot_bboxes(img, image_dict['annotations'])
-
+            plot_bboxes(img, annotations)
     return label_list
 
 
-def _download_split(key):
-    """Download a split file from GitHub and return list of image names (without extension)."""
-    url = SPLIT_URLS[key]
-    return [line.decode('utf-8').split('.')[0].strip() for line in urllib.request.urlopen(url)]
+def _download_split(key: str) -> list[str]:
+    """Download a split file from GitHub; return image names (without extension)."""
+    return [line.decode('utf-8').split('.')[0].strip() for line in urllib.request.urlopen(SPLIT_URLS[key])]
 
 
-def _img_resolution(image_path):
+def _img_data(image_path: str) -> tuple[int, int, cv2.Mat]:
+    """Return ``(height, width, image_array)`` for *image_path*."""
     img = cv2.imread(image_path)
     if img is None:
         raise FileNotFoundError(f'Cannot read image: {image_path}')
-    return img.shape[:2], img
+    h, w = img.shape[:2]
+    return h, w, img
 
 
-def convert_create_ml_to_yolo(labels, image_dir, parent_dir):
+def convert_create_ml_to_yolo(labels: list[dict[str, Any]], image_dir: str, parent_dir: str) -> None:
+    """Convert CreateML label list to YOLO-format dataset on disk."""
     train_split = _download_split('train')
     val_split = _download_split('val')
     test_split = _download_split('test')
@@ -105,45 +108,37 @@ def convert_create_ml_to_yolo(labels, image_dir, parent_dir):
         os.makedirs(os.path.join(parent_dir, folder, 'annotations'), exist_ok=True)
 
     for image in labels:
-        image_name = image['image']
-        image_name_wo_extension = image_name.split('.')[0]
-        image_path = os.path.join(image_dir, image['image'])
-        img_res, img = _img_resolution(image_path)
-        img_h, img_w = img_res
+        image_name: str = image['image']
+        stem: str = image_name.split('.')[0]
+        image_path: str = os.path.join(image_dir, image_name)
+        img_h, img_w, img = _img_data(image_path)
 
-        yolo_annotations = ''
-
+        yolo_lines: list[str] = []
         for annot in image['annotations']:
             if annot['label'] != CAR_LABEL:
-                log.warning(f'Found an annotation with label {annot["label"]}. Skipping...')
+                log.warning('Skipping label %s', annot['label'])
                 continue
+            c = annot['coordinates']
+            yolo_lines.append(
+                f'{CAR_CLASS_ID} {round(c["x"] / img_w, YOLO_ROUND_DECIMALS):.6f} '
+                f'{round(c["y"] / img_h, YOLO_ROUND_DECIMALS):.6f} '
+                f'{round(c["width"] / img_w, YOLO_ROUND_DECIMALS):.6f} '
+                f'{round(c["height"] / img_h, YOLO_ROUND_DECIMALS):.6f}\n'
+            )
 
-            x = annot['coordinates']['x']
-            y = annot['coordinates']['y']
-            width = annot['coordinates']['width']
-            height = annot['coordinates']['height']
-
-            x_center = round(x / img_w, YOLO_ROUND_DECIMALS)
-            y_center = round(y / img_h, YOLO_ROUND_DECIMALS)
-            w = round(width / img_w, YOLO_ROUND_DECIMALS)
-            h = round(height / img_h, YOLO_ROUND_DECIMALS)
-
-            yolo_annotations += f'{CAR_CLASS_ID} {x_center:.6f} {y_center:.6f} {w:.6f} {h:.6f}\n'
-
-        if image_name_wo_extension in train_split:
+        if stem in train_split:
             folder = CARPK_FOLDERS[0]
-        elif image_name_wo_extension in val_split:
+        elif stem in val_split:
             folder = CARPK_FOLDERS[1]
-        elif image_name_wo_extension in test_split:
+        elif stem in test_split:
             folder = CARPK_FOLDERS[2]
         else:
             continue
 
-        dst_image_path = os.path.join(parent_dir, folder, 'images', image['image'])
-        cv2.imwrite(dst_image_path, img)
+        cv2.imwrite(os.path.join(parent_dir, folder, 'images', image_name), img)
 
-        annot_file_path = os.path.join(parent_dir, folder, 'annotations', image_name_wo_extension + '.txt')
-        with open(annot_file_path, 'w') as f:
-            f.writelines(yolo_annotations)
+        annot_path: str = os.path.join(parent_dir, folder, 'annotations', stem + '.txt')
+        with open(annot_path, 'w') as f:
+            f.writelines(yolo_lines)
 
-        log.info(f'Created annotation file for {image["image"]}')
+        log.info('Created annotation file for %s', image_name)

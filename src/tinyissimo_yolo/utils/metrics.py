@@ -1,3 +1,6 @@
+import os
+import sys
+
 import cv2
 import torch
 import torchvision.ops as ops
@@ -11,10 +14,26 @@ from tinyissimo_yolo._constants import (
     RECT_BOLD,
 )
 
+# Compatibility: cv2.imshow blocks in headless/CI environments
+_HAS_DISPLAY: bool = os.environ.get('DISPLAY') is not None or sys.platform != 'linux'
+
+
+def _show_image(winname: str, img: cv2.Mat) -> None:
+    """Show image via cv2 if a display is available; no-op otherwise."""
+    if _HAS_DISPLAY:
+        cv2.imshow(winname, img)
+        cv2.waitKey(0)
+
 
 def compute_metrics(
-    gt, pred_boxes, pred_conf, og_image, conf_thresh=DEFAULT_CONF_THRESH, iou_thresh=DEFAULT_IOU_THRESH, plot=False
-):
+    gt: list,
+    pred_boxes: list,
+    pred_conf: list,
+    og_image: cv2.Mat,
+    conf_thresh: float = DEFAULT_CONF_THRESH,
+    iou_thresh: float = DEFAULT_IOU_THRESH,
+    plot: bool = False,
+) -> tuple:
     pred = torch.tensor(pred_boxes)
     pred_conf = torch.tensor(pred_conf)
     pred = pred[pred_conf > conf_thresh]
@@ -39,9 +58,7 @@ def compute_metrics(
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)
     f1 = 2 * (precision * recall) / (precision + recall)
-    num_gt = len(gt)
-    num_pred = len(pred)
-    count_mae = abs(num_gt - num_pred)
+    count_mae = abs(len(gt) - len(pred))
 
     if plot:
         filtered_image = og_image.copy()
@@ -56,8 +73,6 @@ def compute_metrics(
             x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
             color = COLOR_GREEN if pred_has_match[i] else COLOR_BLUE
             cv2.rectangle(filtered_image, (x1, y1), (x2, y2), color, RECT_BOLD)
-
-        cv2.imshow('filtered image', filtered_image)
-        cv2.waitKey(0)
+        _show_image('filtered image', filtered_image)
 
     return count_mae, precision, recall, f1

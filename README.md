@@ -1,5 +1,33 @@
 This repository hosts the code for TinyissimoYOLO and DSORT-MCU as presented in [Ultra-Efficient On-Device Object Detection on AI-Integrated Smart Glasses with TinyissimoYOLO](https://arxiv.org/abs/2311.01057) and [DSORT-MCU: Detecting Small Objects in Real Time on MCUs](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=10600127).
 
+## Quick start
+
+```bash
+# Install dependencies
+uv sync
+
+# Train with tiling
+uv run tinyissimo train
+
+# Evaluate
+uv run tinyissimo evaluate --model-path path/to/model.pt
+
+# Convert CARPK dataset
+uv run tinyissimo convert
+
+# Train and export
+uv run tinyissimo export
+
+# Run tests
+uv run pytest -v
+
+# Lint / format
+uv run ruff check src/tinyissimo_yolo/ tests/
+uv run ruff format --check src/tinyissimo_yolo/ tests/
+```
+
+For more information see the dedicated guides below.
+
 
 
 ## [👓 Ultra-Efficient On-Device Object Detection on AI-Integrated Smart Glasses with TinyissimoYOLO](tinyissimoYOLO_README.md)

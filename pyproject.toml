@@ -20,6 +20,7 @@ dependencies = [
 ]
 
 [project.scripts]
+tinyissimo = "tinyissimo_yolo.__main__:main"
 tinyissimo-train = "tinyissimo_yolo.cli.train:main"
 tinyissimo-evaluate = "tinyissimo_yolo.cli.evaluate:main"
 tinyissimo-convert-dataset = "tinyissimo_yolo.cli.convert_dataset:main"

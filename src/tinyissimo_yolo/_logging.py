@@ -5,6 +5,7 @@ import sys
 
 
 def get_logger(name: str = 'tinyissimo_yolo') -> logging.Logger:
+    """Return a stdout logger with the given name."""
     logger = logging.getLogger(name)
     if not logger.handlers:
         logger.setLevel(logging.INFO)
