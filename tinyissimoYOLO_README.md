@@ -49,8 +49,7 @@ pip install -r requirements.txt
 
 ## Training & Evaluation
 
-
-```
-python a_train_export.py
+```bash
+uv run tinyissimo export
 ```
 
