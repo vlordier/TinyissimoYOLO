@@ -74,11 +74,10 @@ def plot_results(stitched_preds, filtered_boxes, filtered_conf, og_image, og_lab
 
     for instance in og_labels:
         xc, yc, w, h = instance[1:5]
-        xc, yc, w, h = (
-            int(xc * og_image.shape[1]),
-            int(yc * og_image.shape[0]),
-        )
-        int(w * og_image.shape[1]), int(h * og_image.shape[0])
+        xc = int(xc * og_image.shape[1])
+        yc = int(yc * og_image.shape[0])
+        w = int(w * og_image.shape[1])
+        h = int(h * og_image.shape[0])
         x1 = xc - w // 2
         y1 = yc - h // 2
         x2 = xc + w // 2
