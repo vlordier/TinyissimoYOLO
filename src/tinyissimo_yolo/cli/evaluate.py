@@ -21,6 +21,20 @@ from tinyissimo_yolo.utils.metrics import compute_metrics
 log = get_logger(__name__)
 
 
+def get_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description='Evaluate YOLO model on tiled or full images', add_help=False)
+    parser.add_argument('--use-tiling', default=True, action=argparse.BooleanOptionalAction)
+    parser.add_argument('--perform-iou-sweep', default=False, action=argparse.BooleanOptionalAction)
+    parser.add_argument('--plot', default=False, action=argparse.BooleanOptionalAction)
+    parser.add_argument('--image-set', default='test')
+    parser.add_argument('--dataset-yaml-path', default=DATASET_YAML)
+    parser.add_argument('--model-path', default='path/to/your/model.pt')
+    parser.add_argument('--tiling-config', default=TILING_CONFIG)
+    parser.add_argument('--conf-thresh', type=float, default=DEFAULT_CONF_THRESH)
+    parser.add_argument('--iou-thresh', type=float, default=DEFAULT_IOU_THRESH)
+    return parser
+
+
 def _load_dataset_yaml(path: str) -> dict:
     with open(path) as f:
         return yaml.safe_load(f)
@@ -44,16 +58,8 @@ def _collect_predictions(result) -> tuple[list, list]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description='Evaluate YOLO model on tiled or full images')
-    parser.add_argument('--use-tiling', default=True, action=argparse.BooleanOptionalAction)
-    parser.add_argument('--perform-iou-sweep', default=False, action=argparse.BooleanOptionalAction)
-    parser.add_argument('--plot', default=False, action=argparse.BooleanOptionalAction)
-    parser.add_argument('--image-set', default='test')
-    parser.add_argument('--dataset-yaml-path', default=DATASET_YAML)
-    parser.add_argument('--model-path', default='path/to/your/model.pt')
-    parser.add_argument('--tiling-config', default=TILING_CONFIG)
-    parser.add_argument('--conf-thresh', type=float, default=DEFAULT_CONF_THRESH)
-    parser.add_argument('--iou-thresh', type=float, default=DEFAULT_IOU_THRESH)
+    parser = get_parser()
+    parser.add_help = True
     args = parser.parse_args()
 
     import cv2

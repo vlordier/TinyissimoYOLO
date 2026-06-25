@@ -2,12 +2,6 @@ import argparse
 
 import tinyissimo_yolo._vendored  # noqa: F401
 from tinyissimo_yolo._constants import (
-    CARPK_DATA_YAML,
-    DEFAULT_BATCH_SMALL,
-    DEFAULT_EPOCHS_SHORT,
-    DEFAULT_IMGSZ,
-    DEFAULT_OPSET,
-    MODEL_YAML_TINYISSIMO,
     TILING_CONFIG,
 )
 from tinyissimo_yolo._logging import get_logger
@@ -15,17 +9,23 @@ from tinyissimo_yolo._logging import get_logger
 log = get_logger(__name__)
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description='Train a TinyissimoYOLO model with tiling')
+def get_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description='Train a TinyissimoYOLO model with tiling', add_help=False)
     parser.add_argument('--tiling-config', default=TILING_CONFIG)
-    parser.add_argument('--data', default=CARPK_DATA_YAML)
-    parser.add_argument('--model', default=MODEL_YAML_TINYISSIMO)
-    parser.add_argument('--imgsz', type=int, default=DEFAULT_IMGSZ)
-    parser.add_argument('--epochs', type=int, default=DEFAULT_EPOCHS_SHORT)
-    parser.add_argument('--batch', type=int, default=DEFAULT_BATCH_SMALL)
+    parser.add_argument('--data', default='CARPK_tiling.yaml')
+    parser.add_argument('--model', default='tinyissimo-v1-small.yaml')
+    parser.add_argument('--imgsz', type=int, default=256)
+    parser.add_argument('--epochs', type=int, default=1)
+    parser.add_argument('--batch', type=int, default=64)
     parser.add_argument('--project', default=None)
     parser.add_argument('--no-wandb', action='store_true')
     parser.add_argument('--single-cls', action='store_true', default=True)
+    return parser
+
+
+def main() -> None:
+    parser = get_parser()
+    parser.add_help = True
     args = parser.parse_args()
 
     from ultralytics import YOLO
@@ -54,7 +54,7 @@ def main() -> None:
     n_params = sum(p.numel() for p in model.model.model.parameters())  # type: ignore[union-attr]
     log.info('Layers: %d, Parameters: %d', n_layers, n_params)
 
-    model.export(format='onnx', imgsz=[args.imgsz, args.imgsz], opset=DEFAULT_OPSET)
+    model.export(format='onnx', imgsz=[args.imgsz, args.imgsz], opset=12)
 
 
 if __name__ == '__main__':

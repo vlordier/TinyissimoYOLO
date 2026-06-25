@@ -17,14 +17,20 @@ from tinyissimo_yolo._logging import get_logger
 log = get_logger(__name__)
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description='Train and export a TinyissimoYOLO model')
+def get_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description='Train and export a TinyissimoYOLO model', add_help=False)
     parser.add_argument('--version', default='v8', choices=['v1', 'v8'])
     parser.add_argument('--load', action='store_true')
     parser.add_argument('--exp-id', default=DEFAULT_EXP_NAME)
     parser.add_argument('--img-size', type=int, default=DEFAULT_IMGSZ)
     parser.add_argument('--epochs', type=int, default=DEFAULT_EPOCHS_LONG)
     parser.add_argument('--batch', type=int, default=DEFAULT_BATCH_LARGE)
+    return parser
+
+
+def main() -> None:
+    parser = get_parser()
+    parser.add_help = True
     args = parser.parse_args()
 
     if args.version == 'v1':
