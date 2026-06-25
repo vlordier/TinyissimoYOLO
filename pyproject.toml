@@ -52,7 +52,7 @@ package = true
 target-version = "py38"
 line-length = 120
 exclude = ["ultralytics/"]
-extend-exclude = ["setup.cfg"]
+extend-exclude = []
 
 [tool.ruff.lint]
 select = [

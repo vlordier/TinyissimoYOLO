@@ -22,6 +22,7 @@ log = get_logger(__name__)
 
 _ANNOT_RE: re.Pattern = re.compile(r'\d+ \d+ \d+ \d+ \d+')
 _HAS_DISPLAY: bool = os.environ.get('DISPLAY') is not None or sys.platform != 'linux'
+_SPLIT_CACHE: dict[str, list[str]] = {}
 
 
 def load_gt_bbox(filepath: str) -> list[dict[str, Any]]:
@@ -85,8 +86,12 @@ def convert_carpk_to_create_ml(label_dir: str, images_dir: str, debug_plot: bool
 
 
 def _download_split(key: str) -> list[str]:
-    """Download a split file from GitHub; return image names (without extension)."""
-    return [line.decode('utf-8').split('.')[0].strip() for line in urllib.request.urlopen(SPLIT_URLS[key])]
+    """Download (or return cached) split file; return image names without extension."""
+    if key not in _SPLIT_CACHE:
+        _SPLIT_CACHE[key] = [
+            line.decode('utf-8').split('.')[0].strip() for line in urllib.request.urlopen(SPLIT_URLS[key])
+        ]
+    return _SPLIT_CACHE[key]
 
 
 def _img_data(image_path: str):
@@ -142,4 +147,4 @@ def convert_create_ml_to_yolo(labels: list[dict[str, Any]], image_dir: str, pare
         with open(annot_path, 'w') as f:
             f.writelines(yolo_lines)
 
-        log.info('Created annotation file for %s', image_name)
+    log.info('Created %d annotation files in %s', len(labels), parent_dir)
