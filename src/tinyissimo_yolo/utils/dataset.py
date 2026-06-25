@@ -9,7 +9,6 @@ from tinyissimo_yolo._constants import (
     CAR_LABEL,
     CARPK_FOLDERS,
     COLOR_RED,
-    HALF,
     IMAGE_EXTENSIONS,
     RECT_NORMAL,
     SPLIT_URLS,
@@ -37,8 +36,8 @@ def load_gt_bbox(filepath):
         y2 = float(info[4])
         width = x2 - x1
         height = y2 - y1
-        x = x1 + HALF * width
-        y = y1 + HALF * height
+        x = x1 + 0.5 * width
+        y = y1 + 0.5 * height
         instance = {
             'label': CAR_LABEL,
             'coordinates': {'x': x, 'y': y, 'width': int(width), 'height': int(height)},
@@ -52,8 +51,8 @@ def plot_bboxes(image, instances):
     for instance in instances:
         width = instance['coordinates']['width']
         height = instance['coordinates']['height']
-        x = int(instance['coordinates']['x'] - HALF * width)
-        y = int(instance['coordinates']['y'] - HALF * height)
+        x = int(instance['coordinates']['x'] - 0.5 * width)
+        y = int(instance['coordinates']['y'] - 0.5 * height)
         start_point = (x, y)
         end_point = (x + width, y + height)
         cv2.rectangle(image_plot, start_point, end_point, COLOR_RED, RECT_NORMAL)
@@ -73,9 +72,6 @@ def convert_carpk_to_create_ml(label_dir, images_dir, debug_plot=False):
         image_dict = {
             'image': image_filename,
             'annotations': annotations,
-            'normalized_avg_bbox_area': -1,
-            'overlapping_bboxes_exist': True,
-            'top_down_view': True,
         }
         label_list.append(image_dict)
 
