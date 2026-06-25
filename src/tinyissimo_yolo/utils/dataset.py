@@ -15,19 +15,26 @@ from tinyissimo_yolo._constants import (
     SPLIT_URLS,
     YOLO_ROUND_DECIMALS,
 )
+from tinyissimo_yolo._logging import get_logger
+
+log = get_logger(__name__)
+
+_ANNOT_RE = re.compile(r'\d+ \d+ \d+ \d+ \d+')
 
 
 def load_gt_bbox(filepath):
+    """Load CARPK annotation file. Format: <class> <x1> <y1> <x2> <y2> per line."""
     with open(filepath) as f:
         data = f.read()
-    objs = re.findall(r'\d+ \d+ \d+ \d+ \d+', data)
+    objs = _ANNOT_RE.findall(data)
     annots = []
     for obj in objs:
         info = re.findall(r'\d+', obj)
-        x1 = float(info[0])
-        y1 = float(info[1])
-        x2 = float(info[2])
-        y2 = float(info[3])
+        # CARPK format: class x1 y1 x2 y2 — skip the class label
+        x1 = float(info[1])
+        y1 = float(info[2])
+        x2 = float(info[3])
+        y2 = float(info[4])
         width = x2 - x1
         height = y2 - y1
         x = x1 + HALF * width
@@ -49,7 +56,7 @@ def plot_bboxes(image, instances):
         y = int(instance['coordinates']['y'] - HALF * height)
         start_point = (x, y)
         end_point = (x + width, y + height)
-        image_plot = cv2.rectangle(image_plot, start_point, end_point, COLOR_RED, RECT_NORMAL)
+        cv2.rectangle(image_plot, start_point, end_point, COLOR_RED, RECT_NORMAL)
 
     cv2.imshow('annotated image', image_plot)
     cv2.waitKey(0)
@@ -72,7 +79,7 @@ def convert_carpk_to_create_ml(label_dir, images_dir, debug_plot=False):
         }
         label_list.append(image_dict)
 
-        if debug_plot and image_filename == '20160331_NTU_00066.png':
+        if debug_plot:
             img = cv2.imread(os.path.join(images_dir, image_filename))
             plot_bboxes(img, image_dict['annotations'])
 
@@ -111,7 +118,7 @@ def convert_create_ml_to_yolo(labels, image_dir, parent_dir):
 
         for annot in image['annotations']:
             if annot['label'] != CAR_LABEL:
-                print(f'Found an annotation with label {annot["label"]}. Skipping...')
+                log.warning(f'Found an annotation with label {annot["label"]}. Skipping...')
                 continue
 
             x = annot['coordinates']['x']
@@ -142,4 +149,4 @@ def convert_create_ml_to_yolo(labels, image_dir, parent_dir):
         with open(annot_file_path, 'w') as f:
             f.writelines(yolo_annotations)
 
-        print(f'Created annotation file for {image["image"]}')
+        log.info(f'Created annotation file for {image["image"]}')

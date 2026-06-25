@@ -10,7 +10,7 @@ def main():
     parser.add_argument('--new-data-dir', default='../../datasets/CARPK')
 
     args = parser.parse_args()
-    create_ml_labels = convert_carpk_to_create_ml(args.labels_dir, args.images_dir, debug_plot=False)
+    create_ml_labels = convert_carpk_to_create_ml(args.labels_dir, args.images_dir)
     convert_create_ml_to_yolo(create_ml_labels, args.images_dir, args.new_data_dir)
 
 

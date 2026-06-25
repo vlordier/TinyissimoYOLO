@@ -14,8 +14,16 @@ from tinyissimo_yolo._constants import (
     IOU_SWEEP_STEPS,
     TILING_CONFIG,
 )
+from tinyissimo_yolo._logging import get_logger
 from tinyissimo_yolo.utils.io import load_test_images, load_tiled_test_images
 from tinyissimo_yolo.utils.metrics import compute_metrics
+
+log = get_logger(__name__)
+
+
+def _load_dataset_yaml(path):
+    with open(path) as f:
+        return yaml.safe_load(f)
 
 
 def _load_labels(labels_dir, image_name):
@@ -56,19 +64,17 @@ def main():
     from ultralytics import YOLO
     from ultralytics.utils.offline_tiling import Tiler
 
+    dataset_yaml = _load_dataset_yaml(args.dataset_yaml_path)
+    data_dir = dataset_yaml['path'] + '/'
+
     if args.use_tiling:
         tiler = Tiler(args.tiling_config)
         tiler.get_split_dataset()
-        with open(args.dataset_yaml_path) as f:
-            dataset_yaml = yaml.safe_load(f)
-        data_dir = dataset_yaml['path'] + '/'
         test_images = load_tiled_test_images(data_dir + dataset_yaml[args.image_set])
-        with open(data_dir + dataset_yaml[args.image_set].replace('images', 'tiles_dict') + '.yaml') as f:
+        tiles_dict_path = data_dir + dataset_yaml[args.image_set].replace('images', 'tiles_dict') + '.yaml'
+        with open(tiles_dict_path) as f:
             tiles_dict = yaml.safe_load(f)
     else:
-        with open(args.dataset_yaml_path) as f:
-            dataset_yaml = yaml.safe_load(f)
-        data_dir = dataset_yaml['path'] + '/'
         test_images = load_test_images(data_dir + dataset_yaml['original_images'][args.image_set])
 
     original_image_dir = data_dir + dataset_yaml['original_images'][args.image_set]
@@ -123,7 +129,7 @@ def main():
             full_recall.append(re)
             full_f1.append(f1)
 
-    print(
+    log.info(
         f'Average Count Mae: {np.nanmean(full_count_mae)},'
         f' Average Precision: {np.nanmean(full_precision)},'
         f' Average Recall: {np.mean(full_recall)},'

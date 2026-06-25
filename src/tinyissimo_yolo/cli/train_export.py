@@ -9,6 +9,9 @@ from tinyissimo_yolo._constants import (
     DEFAULT_PROJECT,
     DEFAULT_SGD,
 )
+from tinyissimo_yolo._logging import get_logger
+
+log = get_logger(__name__)
 
 
 def main():
@@ -22,9 +25,10 @@ def main():
     args = parser.parse_args()
 
     if args.version == 'v1':
-        print('Please, check to modify ultralytics/nn/modules/head/Detect')
-        print('for TinyissimoYOLOv1.3 small and big change')
-        print('line 36 to: self.reg_max=16')
+        log.error(
+            'Please, check to modify ultralytics/nn/modules/head/Detect '
+            'for TinyissimoYOLOv1.3 small and big change line 36 to: self.reg_max=16'
+        )
         return
 
     from ultralytics import YOLO

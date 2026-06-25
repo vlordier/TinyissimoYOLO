@@ -9,6 +9,9 @@ from tinyissimo_yolo._constants import (
     MODEL_YAML_TINYISSIMO,
     TILING_CONFIG,
 )
+from tinyissimo_yolo._logging import get_logger
+
+log = get_logger(__name__)
 
 
 def main():
@@ -20,14 +23,19 @@ def main():
     parser.add_argument('--epochs', type=int, default=DEFAULT_EPOCHS_SHORT)
     parser.add_argument('--batch', type=int, default=DEFAULT_BATCH_SMALL)
     parser.add_argument('--project', default=None)
+    parser.add_argument('--no-wandb', action='store_true', help='Skip wandb initialisation')
     args = parser.parse_args()
-
-    import wandb
 
     from ultralytics import YOLO
     from ultralytics.utils.offline_tiling import Tiler
 
-    wandb.init(project=args.project or 'ultralytics-test')
+    if not args.no_wandb:
+        try:
+            import wandb
+
+            wandb.init(project=args.project or 'ultralytics-test')
+        except Exception as exc:
+            log.warning(f'wandb init skipped ({exc})')
 
     tiler = Tiler(args.tiling_config)
     tiler.get_split_dataset()
@@ -36,10 +44,10 @@ def main():
     model.train(data=args.data, imgsz=args.imgsz, epochs=args.epochs, batch=args.batch, single_cls=True)
 
     num_layers = sum(1 for _ in model.model.model.modules()) - 1
-    print(f'Number of layers: {num_layers}')
+    log.info(f'Number of layers: {num_layers}')
 
     num_params = sum(p.numel() for p in model.model.model.parameters())
-    print(f'Number of parameters: {num_params}')
+    log.info(f'Number of parameters: {num_params}')
 
     model.export(format='onnx', imgsz=[args.imgsz, args.imgsz], opset=DEFAULT_OPSET)
 
