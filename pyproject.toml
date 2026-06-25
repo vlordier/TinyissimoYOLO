@@ -1,0 +1,36 @@
+[project]
+name = "tinyissimo-yolo"
+version = "0.1.0"
+description = "TinyissimoYOLO — ultra-lightweight YOLO for edge deployment"
+requires-python = ">=3.8"
+dependencies = [
+    "matplotlib>=3.2.2",
+    "opencv-python>=4.6.0",
+    "Pillow>=7.1.2",
+    "PyYAML>=5.3.1",
+    "requests>=2.23.0",
+    "scipy>=1.4.1",
+    "torch>=1.7.0",
+    "torchvision>=0.8.1",
+    "tqdm>=4.64.0",
+    "wandb",
+    "pandas>=1.1.4",
+    "seaborn>=0.11.0",
+    "psutil",
+]
+
+[tool.uv]
+
+[tool.ruff]
+target-version = "py38"
+line-length = 120
+exclude = ["ultralytics/"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "N", "SIM"]
+ignore = ["E501", "SIM108", "SIM115"]  # line-length handled by formatter; SIMs need manual refactor
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+line-ending = "auto"
