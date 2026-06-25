@@ -24,6 +24,9 @@ def main():
     parser.add_argument('--batch', type=int, default=DEFAULT_BATCH_SMALL)
     parser.add_argument('--project', default=None)
     parser.add_argument('--no-wandb', action='store_true', help='Skip wandb initialisation')
+    parser.add_argument(
+        '--single-cls', action='store_true', default=True, help='Single-class detection (default: True)'
+    )
     args = parser.parse_args()
 
     from ultralytics import YOLO
@@ -41,7 +44,7 @@ def main():
     tiler.get_split_dataset()
 
     model = YOLO(args.model)
-    model.train(data=args.data, imgsz=args.imgsz, epochs=args.epochs, batch=args.batch, single_cls=True)
+    model.train(data=args.data, imgsz=args.imgsz, epochs=args.epochs, batch=args.batch, single_cls=args.single_cls)
 
     num_layers = sum(1 for _ in model.model.model.modules()) - 1
     log.info(f'Number of layers: {num_layers}')

@@ -92,7 +92,7 @@ def _img_resolution(image_path):
     img = cv2.imread(image_path)
     if img is None:
         raise FileNotFoundError(f'Cannot read image: {image_path}')
-    return img.shape[:2]
+    return img.shape[:2], img
 
 
 def convert_create_ml_to_yolo(labels, image_dir, parent_dir):
@@ -108,7 +108,8 @@ def convert_create_ml_to_yolo(labels, image_dir, parent_dir):
         image_name = image['image']
         image_name_wo_extension = image_name.split('.')[0]
         image_path = os.path.join(image_dir, image['image'])
-        img_h, img_w = _img_resolution(image_path)
+        img_res, img = _img_resolution(image_path)
+        img_h, img_w = img_res
 
         yolo_annotations = ''
 
@@ -139,7 +140,7 @@ def convert_create_ml_to_yolo(labels, image_dir, parent_dir):
             continue
 
         dst_image_path = os.path.join(parent_dir, folder, 'images', image['image'])
-        cv2.imwrite(dst_image_path, cv2.imread(image_path))
+        cv2.imwrite(dst_image_path, img)
 
         annot_file_path = os.path.join(parent_dir, folder, 'annotations', image_name_wo_extension + '.txt')
         with open(annot_file_path, 'w') as f:

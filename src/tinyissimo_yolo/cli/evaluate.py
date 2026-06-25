@@ -98,30 +98,19 @@ def main():
         else:
             filtered_boxes, filtered_conf = _collect_predictions(result)
 
-        if args.perform_iou_sweep:
-            iou_thresh_vals = np.linspace(IOU_SWEEP_START, IOU_SWEEP_END, IOU_SWEEP_STEPS)
-            for iou_thresh in iou_thresh_vals:
-                count_mae, pr, re, f1 = compute_metrics(
-                    instances_float,
-                    filtered_boxes,
-                    filtered_conf,
-                    og_image,
-                    conf_thresh=args.conf_thresh,
-                    iou_thresh=iou_thresh,
-                    plot=args.plot,
-                )
-                full_count_mae.append(count_mae)
-                full_precision.append(pr)
-                full_recall.append(re)
-                full_f1.append(f1)
-        else:
+        iou_thresh_vals = (
+            np.linspace(IOU_SWEEP_START, IOU_SWEEP_END, IOU_SWEEP_STEPS)
+            if args.perform_iou_sweep
+            else [args.iou_thresh]
+        )
+        for iou_thresh in iou_thresh_vals:
             count_mae, pr, re, f1 = compute_metrics(
                 instances_float,
                 filtered_boxes,
                 filtered_conf,
                 og_image,
                 conf_thresh=args.conf_thresh,
-                iou_thresh=args.iou_thresh,
+                iou_thresh=iou_thresh,
                 plot=args.plot,
             )
             full_count_mae.append(count_mae)
