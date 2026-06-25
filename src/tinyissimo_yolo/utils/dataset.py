@@ -64,7 +64,7 @@ def plot_bboxes(image: cv2.Mat, instances: list[dict[str, Any]]) -> None:
         y = int(c['y'] - 0.5 * c['height'])
         cv2.rectangle(overlay, (x, y), (x + c['width'], y + c['height']), COLOR_RED, RECT_NORMAL)
     if _HAS_DISPLAY:
-        cv2.imshow('annotated image', overlay)
+        cv2.imshow('annotated image', overlay)  # type: ignore[arg-type]
         cv2.waitKey(0)
 
 
@@ -79,7 +79,8 @@ def convert_carpk_to_create_ml(label_dir: str, images_dir: str, debug_plot: bool
         label_list.append({'image': image_filename, 'annotations': annotations})
         if debug_plot:
             img = cv2.imread(os.path.join(images_dir, image_filename))
-            plot_bboxes(img, annotations)
+            if img is not None:
+                plot_bboxes(img, annotations)  # type: ignore[arg-type]
     return label_list
 
 
@@ -88,7 +89,7 @@ def _download_split(key: str) -> list[str]:
     return [line.decode('utf-8').split('.')[0].strip() for line in urllib.request.urlopen(SPLIT_URLS[key])]
 
 
-def _img_data(image_path: str) -> tuple[int, int, cv2.Mat]:
+def _img_data(image_path: str):
     """Return ``(height, width, image_array)`` for *image_path*."""
     img = cv2.imread(image_path)
     if img is None:

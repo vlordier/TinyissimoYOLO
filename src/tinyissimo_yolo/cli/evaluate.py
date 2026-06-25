@@ -91,7 +91,11 @@ def main() -> None:
         result = model(test_images[image], stream=True, verbose=False)
 
         if args.use_tiling:
-            _, boxes, confs = tiler.stitch_tiled_predictions(result, tiles_dict, image)
+            _, boxes, confs = tiler.stitch_tiled_predictions(
+                result,  # type: ignore[arg-type]
+                tiles_dict,
+                image,
+            )
         else:
             boxes, confs = _collect_predictions(result)
 
@@ -105,7 +109,7 @@ def main() -> None:
                 instances_float,
                 boxes,
                 confs,
-                og_image,
+                og_image,  # type: ignore[arg-type]
                 conf_thresh=args.conf_thresh,
                 iou_thresh=thresh,
                 plot=args.plot,

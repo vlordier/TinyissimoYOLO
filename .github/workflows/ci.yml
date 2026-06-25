@@ -18,4 +18,5 @@ jobs:
       - run: uv sync --group dev
       - run: uv run ruff check src/tinyissimo_yolo/ tests/
       - run: uv run ruff format --check src/tinyissimo_yolo/ tests/
+      - run: uv run mypy src/tinyissimo_yolo/
       - run: uv run pytest -v

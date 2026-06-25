@@ -35,8 +35,8 @@ def compute_metrics(
     plot: bool = False,
 ) -> tuple:
     pred = torch.tensor(pred_boxes)
-    pred_conf = torch.tensor(pred_conf)
-    pred = pred[pred_conf > conf_thresh]
+    conf_t = torch.tensor(pred_conf)
+    pred = pred[conf_t > conf_thresh]
 
     gt_boxes = torch.zeros((len(gt), 4))
     img_w, img_h = og_image.shape[1], og_image.shape[0]

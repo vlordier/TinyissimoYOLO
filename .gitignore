@@ -144,7 +144,7 @@ tests/
 !tests/
 .DS_Store
 
-# Neural Network weights -----------------------------------------------------------------------------------------------
+# Neural Network weights
 weights/
 *.weights
 *.pt
@@ -166,14 +166,5 @@ pnnx*
 ultralytics/assets/
 !ultralytics/assets/bus.jpg
 !ultralytics/assets/zidane.jpg
-
-
-
-exp/
-tests/
-!tests/
-runs/
-results/
-wandb/
 
 .DS_Store

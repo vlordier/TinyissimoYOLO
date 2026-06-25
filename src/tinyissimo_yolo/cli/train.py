@@ -41,10 +41,16 @@ def main() -> None:
     Tiler(args.tiling_config).get_split_dataset()
 
     model = YOLO(args.model)
-    model.train(data=args.data, imgsz=args.imgsz, epochs=args.epochs, batch=args.batch, single_cls=args.single_cls)
+    model.train(  # type: ignore[misc]
+        data=args.data,
+        imgsz=args.imgsz,
+        epochs=args.epochs,
+        batch=args.batch,
+        single_cls=args.single_cls,
+    )
 
-    n_layers = sum(1 for _ in model.model.model.modules()) - 1
-    n_params = sum(p.numel() for p in model.model.model.parameters())
+    n_layers = sum(1 for _ in model.model.model.modules()) - 1  # type: ignore[union-attr, misc]
+    n_params = sum(p.numel() for p in model.model.model.parameters())  # type: ignore[union-attr]
     log.info('Layers: %d, Parameters: %d', n_layers, n_params)
 
     model.export(format='onnx', imgsz=[args.imgsz, args.imgsz], opset=DEFAULT_OPSET)

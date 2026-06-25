@@ -37,7 +37,13 @@ find = { namespaces = true, where = ["src"] }
 "" = "src"
 
 [dependency-groups]
-dev = ["pytest>=7"]
+dev = ["pytest>=7", "mypy>=1"]
+
+[tool.pytest.ini_options]
+minversion = "7"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
 
 [tool.uv]
 package = true
@@ -61,11 +67,17 @@ select = [
     "ISC",                    # implicit string concat
     "PIE",                    # misc
     "RUF",                    # ruff-specific
+    "S",                      # flake8-bandit (security)
+    "T20",                    # flake8-print (no print)
+    "ASYNC",                  # flake8-async
+    "T10",                    # flake8-debugger (no pdb)
 ]
 ignore = [
     "E501",                   # line-length handled by formatter
     "RUF012",                 # mutable class vars — not applicable here
     "ARG001",                 # unused function args — allow callbacks
+    "S101",                   # allow assert in non-test code
+    "S310",                   # allow urlopen with hardcoded trusted URLs
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -75,3 +87,14 @@ ignore = [
 quote-style = "single"
 indent-style = "space"
 line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.13"
+strict = false
+check_untyped_defs = true
+ignore_missing_imports = true
+namespace_packages = true
+
+[[tool.mypy.overrides]]
+module = "ultralytics.*"
+ignore_errors = true

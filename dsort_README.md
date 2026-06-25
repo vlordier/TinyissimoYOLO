@@ -4,11 +4,16 @@
 
 <img width="1024" src="pics/tiling_method.png">
 
-## <div align="center">Install Ultralytics</div>
+## <div align="center">Install</div>
 
-Pip install the ultralytics package including all [requirements](https://github.com/ultralytics/ultralytics/blob/main/requirements.txt) in a [**Python>=3.8**](https://www.python.org/) environment with [**PyTorch>=1.7**](https://pytorch.org/get-started/locally/).
+This project uses **uv** for dependency management. [Install uv](https://docs.astral.sh/uv/getting-started/installation/) first, then:
 
-[![PyPI version](https://badge.fury.io/py/ultralytics.svg)](https://badge.fury.io/py/ultralytics) [![Downloads](https://static.pepy.tech/badge/ultralytics)](https://pepy.tech/project/ultralytics)
+```bash
+cd /path/to/TinyissimoYOLO
+uv sync
+```
+
+Alternatively, install dependencies via pip in a **Python>=3.8** environment with **PyTorch>=1.7**:
 
 ```bash
 pip install ultralytics
