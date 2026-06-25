@@ -39,10 +39,30 @@ package = true
 target-version = "py38"
 line-length = 120
 exclude = ["ultralytics/"]
+extend-exclude = ["setup.cfg"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W", "UP", "N", "SIM"]
-ignore = ["E501", "SIM108", "SIM115"]  # line-length handled by formatter; SIMs need manual refactor
+select = [
+    "E", "F", "I", "W",      # pycodestyle + pyflakes + isort
+    "UP",                     # pyupgrade
+    "N",                      # naming
+    "SIM",                    # simplify
+    "PERF",                   # performance
+    "RET",                    # return
+    "ARG",                    # unused arguments
+    "C4",                     # comprehensions
+    "ISC",                    # implicit string concat
+    "PIE",                    # misc
+    "RUF",                    # ruff-specific
+]
+ignore = [
+    "E501",                   # line-length handled by formatter
+    "RUF012",                 # mutable class vars — not applicable here
+    "ARG001",                 # unused function args — allow callbacks
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ARG001", "PERF", "SIM108"]
 
 [tool.ruff.format]
 quote-style = "single"

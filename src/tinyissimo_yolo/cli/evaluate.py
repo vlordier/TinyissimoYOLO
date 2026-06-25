@@ -5,8 +5,36 @@ import numpy as np
 import yaml
 
 import tinyissimo_yolo._vendored  # noqa: F401  ensure vendored ultralytics is on sys.path
+from tinyissimo_yolo._constants import (
+    DATASET_YAML,
+    DEFAULT_CONF_THRESH,
+    DEFAULT_IOU_THRESH,
+    IOU_SWEEP_END,
+    IOU_SWEEP_START,
+    IOU_SWEEP_STEPS,
+    TILING_CONFIG,
+)
 from tinyissimo_yolo.utils.io import load_test_images, load_tiled_test_images
 from tinyissimo_yolo.utils.metrics import compute_metrics
+
+
+def _load_labels(labels_dir, image_name):
+    """Load ground-truth labels for a single image."""
+    path = os.path.join(labels_dir, image_name.replace('png', 'txt'))
+    with open(path) as f:
+        lines = f.read().splitlines()
+    instances = [line.split(' ') for line in lines]
+    return [[float(v) for v in inst] for inst in instances]
+
+
+def _collect_predictions(result):
+    boxes, confs = [], []
+    for pred in result:
+        for box, conf in zip(pred.boxes.xyxy, pred.boxes.conf):
+            x1, y1, x2, y2 = box
+            boxes.append([x1, y1, x2, y2])
+            confs.append(conf)
+    return boxes, confs
 
 
 def main():
@@ -15,11 +43,11 @@ def main():
     parser.add_argument('--perform-iou-sweep', default=False, action=argparse.BooleanOptionalAction)
     parser.add_argument('--plot', default=False, action=argparse.BooleanOptionalAction)
     parser.add_argument('--image-set', default='test')
-    parser.add_argument('--dataset-yaml-path', default='ultralytics/cfg/datasets/CARPK_tiling.yaml')
+    parser.add_argument('--dataset-yaml-path', default=DATASET_YAML)
     parser.add_argument('--model-path', default='path/to/your/model.pt')
-    parser.add_argument('--tiling-config', default='tiling_config.yaml')
-    parser.add_argument('--conf-thresh', type=float, default=0.6)
-    parser.add_argument('--iou-thresh', type=float, default=0.5)
+    parser.add_argument('--tiling-config', default=TILING_CONFIG)
+    parser.add_argument('--conf-thresh', type=float, default=DEFAULT_CONF_THRESH)
+    parser.add_argument('--iou-thresh', type=float, default=DEFAULT_IOU_THRESH)
     args = parser.parse_args()
 
     import cv2
@@ -55,27 +83,17 @@ def main():
 
     for image in tqdm(test_images, position=0, leave=True):
         og_image = cv2.imread(os.path.join(original_image_dir, image))
-        og_labels_path = os.path.join(original_labels_dir, image.replace('png', 'txt'))
-        with open(og_labels_path) as f:
-            instances = f.read().splitlines()
-            instances = [instance.split(' ') for instance in instances]
-            instances_float = [[float(coord) for coord in instance] for instance in instances]
+        instances_float = _load_labels(original_labels_dir, image)
 
         result = model(test_images[image], stream=True, verbose=False)
 
         if args.use_tiling:
-            stitched_preds, filtered_boxes, filtered_conf = tiler.stitch_tiled_predictions(result, tiles_dict, image)
+            _stitched_preds, filtered_boxes, filtered_conf = tiler.stitch_tiled_predictions(result, tiles_dict, image)
         else:
-            filtered_boxes = []
-            filtered_conf = []
-            for pred in result:
-                for box, conf in zip(pred.boxes.xyxy, pred.boxes.conf):
-                    x1, y1, x2, y2 = box
-                    filtered_boxes.append([x1, y1, x2, y2])
-                    filtered_conf.append(conf)
+            filtered_boxes, filtered_conf = _collect_predictions(result)
 
         if args.perform_iou_sweep:
-            iou_thresh_vals = np.linspace(0.5, 0.95, 10)
+            iou_thresh_vals = np.linspace(IOU_SWEEP_START, IOU_SWEEP_END, IOU_SWEEP_STEPS)
             for iou_thresh in iou_thresh_vals:
                 count_mae, pr, re, f1 = compute_metrics(
                     instances_float,

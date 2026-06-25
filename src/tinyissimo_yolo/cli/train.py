@@ -1,16 +1,24 @@
 import argparse
 
 import tinyissimo_yolo._vendored  # noqa: F401  ensure vendored ultralytics is on sys.path
+from tinyissimo_yolo._constants import (
+    DEFAULT_BATCH_SMALL,
+    DEFAULT_EPOCHS_SHORT,
+    DEFAULT_IMGSZ,
+    DEFAULT_OPSET,
+    MODEL_YAML_TINYISSIMO,
+    TILING_CONFIG,
+)
 
 
 def main():
     parser = argparse.ArgumentParser(description='Train a TinyissimoYOLO model with tiling')
-    parser.add_argument('--tiling-config', default='tiling_config.yaml')
+    parser.add_argument('--tiling-config', default=TILING_CONFIG)
     parser.add_argument('--data', default='CARPK_tiling.yaml')
-    parser.add_argument('--model', default='tinyissimo-v1-small.yaml')
-    parser.add_argument('--imgsz', type=int, default=256)
-    parser.add_argument('--epochs', type=int, default=1)
-    parser.add_argument('--batch', type=int, default=64)
+    parser.add_argument('--model', default=MODEL_YAML_TINYISSIMO)
+    parser.add_argument('--imgsz', type=int, default=DEFAULT_IMGSZ)
+    parser.add_argument('--epochs', type=int, default=DEFAULT_EPOCHS_SHORT)
+    parser.add_argument('--batch', type=int, default=DEFAULT_BATCH_SMALL)
     parser.add_argument('--project', default=None)
     args = parser.parse_args()
 
@@ -33,7 +41,7 @@ def main():
     num_params = sum(p.numel() for p in model.model.model.parameters())
     print(f'Number of parameters: {num_params}')
 
-    model.export(format='onnx', imgsz=[args.imgsz, args.imgsz], opset=12)
+    model.export(format='onnx', imgsz=[args.imgsz, args.imgsz], opset=DEFAULT_OPSET)
 
 
 if __name__ == '__main__':

@@ -4,6 +4,18 @@ import urllib.request
 
 import cv2
 
+from tinyissimo_yolo._constants import (
+    CAR_CLASS_ID,
+    CAR_LABEL,
+    CARPK_FOLDERS,
+    COLOR_RED,
+    HALF,
+    IMAGE_EXTENSIONS,
+    RECT_NORMAL,
+    SPLIT_URLS,
+    YOLO_ROUND_DECIMALS,
+)
+
 
 def load_gt_bbox(filepath):
     with open(filepath) as f:
@@ -18,9 +30,12 @@ def load_gt_bbox(filepath):
         y2 = float(info[3])
         width = x2 - x1
         height = y2 - y1
-        x = x1 + 0.5 * width
-        y = y1 + 0.5 * height
-        instance = {'label': 'car', 'coordinates': {'x': x, 'y': y, 'width': int(width), 'height': int(height)}}
+        x = x1 + HALF * width
+        y = y1 + HALF * height
+        instance = {
+            'label': CAR_LABEL,
+            'coordinates': {'x': x, 'y': y, 'width': int(width), 'height': int(height)},
+        }
         annots.append(instance)
     return annots
 
@@ -30,13 +45,11 @@ def plot_bboxes(image, instances):
     for instance in instances:
         width = instance['coordinates']['width']
         height = instance['coordinates']['height']
-        x = int(instance['coordinates']['x'] - 0.5 * width)
-        y = int(instance['coordinates']['y'] - 0.5 * height)
+        x = int(instance['coordinates']['x'] - HALF * width)
+        y = int(instance['coordinates']['y'] - HALF * height)
         start_point = (x, y)
         end_point = (x + width, y + height)
-        color = (255, 0, 0)
-        thickness = 2
-        image_plot = cv2.rectangle(image_plot, start_point, end_point, color, thickness)
+        image_plot = cv2.rectangle(image_plot, start_point, end_point, COLOR_RED, RECT_NORMAL)
 
     cv2.imshow('annotated image', image_plot)
     cv2.waitKey(0)
@@ -45,6 +58,8 @@ def plot_bboxes(image, instances):
 def convert_carpk_to_create_ml(label_dir, images_dir, debug_plot=False):
     label_list = []
     for image_filename in os.listdir(images_dir):
+        if not image_filename.lower().endswith(IMAGE_EXTENSIONS):
+            continue
         base_filename = image_filename.strip().split('.')[0]
         annot_filename = base_filename + '.txt'
         annotations = load_gt_bbox(os.path.join(label_dir, annot_filename))
@@ -64,20 +79,25 @@ def convert_carpk_to_create_ml(label_dir, images_dir, debug_plot=False):
     return label_list
 
 
-def _download_split(url):
+def _download_split(key):
     """Download a split file from GitHub and return list of image names (without extension)."""
-    lines = []
-    for line in urllib.request.urlopen(url):
-        lines.append(line.decode('utf-8').split('.')[0].strip())
-    return lines
+    url = SPLIT_URLS[key]
+    return [line.decode('utf-8').split('.')[0].strip() for line in urllib.request.urlopen(url)]
+
+
+def _img_resolution(image_path):
+    img = cv2.imread(image_path)
+    if img is None:
+        raise FileNotFoundError(f'Cannot read image: {image_path}')
+    return img.shape[:2]
 
 
 def convert_create_ml_to_yolo(labels, image_dir, parent_dir):
-    train_split = _download_split('https://github.com/mojulian/ultralytics/releases/download/0.1/train_images.txt')
-    val_split = _download_split('https://github.com/mojulian/ultralytics/releases/download/0.1/val_images.txt')
-    test_split = _download_split('https://github.com/mojulian/ultralytics/releases/download/0.1/test.txt')
+    train_split = _download_split('train')
+    val_split = _download_split('val')
+    test_split = _download_split('test')
 
-    for folder in ('CARPK_train', 'CARPK_val', 'CARPK_test'):
+    for folder in CARPK_FOLDERS:
         os.makedirs(os.path.join(parent_dir, folder, 'images'), exist_ok=True)
         os.makedirs(os.path.join(parent_dir, folder, 'annotations'), exist_ok=True)
 
@@ -85,40 +105,38 @@ def convert_create_ml_to_yolo(labels, image_dir, parent_dir):
         image_name = image['image']
         image_name_wo_extension = image_name.split('.')[0]
         image_path = os.path.join(image_dir, image['image'])
-        img = cv2.imread(image_path)
-        img_res = img.shape[:2]
+        img_h, img_w = _img_resolution(image_path)
 
         yolo_annotations = ''
 
         for annot in image['annotations']:
-            if annot['label'] != 'car':
+            if annot['label'] != CAR_LABEL:
                 print(f'Found an annotation with label {annot["label"]}. Skipping...')
                 continue
 
-            obj_class = 0
             x = annot['coordinates']['x']
             y = annot['coordinates']['y']
             width = annot['coordinates']['width']
             height = annot['coordinates']['height']
 
-            x_center = round(x / img_res[1], 6)
-            y_center = round(y / img_res[0], 6)
-            w = round(width / img_res[1], 6)
-            h = round(height / img_res[0], 6)
+            x_center = round(x / img_w, YOLO_ROUND_DECIMALS)
+            y_center = round(y / img_h, YOLO_ROUND_DECIMALS)
+            w = round(width / img_w, YOLO_ROUND_DECIMALS)
+            h = round(height / img_h, YOLO_ROUND_DECIMALS)
 
-            yolo_annotations += f'{obj_class} {x_center:.6f} {y_center:.6f} {w:.6f} {h:.6f}\n'
+            yolo_annotations += f'{CAR_CLASS_ID} {x_center:.6f} {y_center:.6f} {w:.6f} {h:.6f}\n'
 
         if image_name_wo_extension in train_split:
-            folder = 'CARPK_train'
+            folder = CARPK_FOLDERS[0]
         elif image_name_wo_extension in val_split:
-            folder = 'CARPK_val'
+            folder = CARPK_FOLDERS[1]
         elif image_name_wo_extension in test_split:
-            folder = 'CARPK_test'
+            folder = CARPK_FOLDERS[2]
         else:
             continue
 
         dst_image_path = os.path.join(parent_dir, folder, 'images', image['image'])
-        cv2.imwrite(dst_image_path, img)
+        cv2.imwrite(dst_image_path, cv2.imread(image_path))
 
         annot_file_path = os.path.join(parent_dir, folder, 'annotations', image_name_wo_extension + '.txt')
         with open(annot_file_path, 'w') as f:
