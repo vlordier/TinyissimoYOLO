@@ -1,0 +1,23 @@
+[project]
+name = "ultralytics"
+version = "8.1.29"
+description = "Vendored Ultralytics YOLO (TinyissimoYOLO fork)"
+requires-python = ">=3.9"
+dependencies = [
+    "torch>=1.7.0",
+    "torchvision>=0.8.1",
+    "numpy",
+    "PyYAML>=5.3",
+    "requests>=2.23",
+    "tqdm>=4.64",
+    "matplotlib>=3.2.2",
+    "opencv-python>=4.6.0",
+    "Pillow>=7.1.2",
+]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages]
+find = { include = ["ultralytics*"] }

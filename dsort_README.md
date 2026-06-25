@@ -4,11 +4,16 @@
 
 <img width="1024" src="pics/tiling_method.png">
 
-## <div align="center">Install Ultralytics</div>
+## <div align="center">Install</div>
 
-Pip install the ultralytics package including all [requirements](https://github.com/ultralytics/ultralytics/blob/main/requirements.txt) in a [**Python>=3.8**](https://www.python.org/) environment with [**PyTorch>=1.7**](https://pytorch.org/get-started/locally/).
+This project uses **uv** for dependency management. [Install uv](https://docs.astral.sh/uv/getting-started/installation/) first, then:
 
-[![PyPI version](https://badge.fury.io/py/ultralytics.svg)](https://badge.fury.io/py/ultralytics) [![Downloads](https://static.pepy.tech/badge/ultralytics)](https://pepy.tech/project/ultralytics)
+```bash
+cd /path/to/TinyissimoYOLO
+uv sync
+```
+
+Alternatively, install dependencies via pip in a **Python>=3.8** environment with **PyTorch>=1.7**:
 
 ```bash
 pip install ultralytics
@@ -38,23 +43,24 @@ TinysissimoYOLOv1.3 detection models trained with different target NBA values fo
 ## <div align="center">Train Models</div>
 
 Adjust the paths and parameters of the tiling algorithm to your liking in the [tiling config](tiling_config.yaml) and make sure to set the mode to `train`. Setting the mode to `train` keeps some of the tiles with no objects in the training such that the model can learn to "not" predict objects when there aren't any in the image.
-To start training just call the training [script](train_julian.py):
+To start training just call the training script:
 
 ```bash
-python train_with_tiling.py
+uv run tinyissimo train
 ```
+
 This script automatically downloads the train, val, test split info used to train our models.
 
 ### Train models on CARPK dataset
 Download the CARPK dataset from [here](https://lafi.github.io/LPN/). To convert the annotations to the correct format we provide a conversion script:
 ```
-python convert_CARPK_to_YOLO.py
+uv run tinyissimo convert
 ```
 ## <div align="center">Evaluate Models</div>
 
 Models can be evaluated by calling
 ```bash
-python eval_on_tiled_images.py --plot=False --image-set='test'
+uv run tinyissimo evaluate --plot=False --image-set='test'
 ```
 
 When evaluating models make sure to set the mode in [tiling_config.yaml](tiling_config.yaml) to `test` such that all empty tiles are also processed and the tiles are correctly stitched together in the end. Setting the `plot` flag to true when calling [eval_on_tiled_images.py](eval_on_tiled_images.py) will plot the predictions as shown in the axample below:

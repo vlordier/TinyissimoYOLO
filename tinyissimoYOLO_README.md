@@ -29,23 +29,27 @@ Our codebase is based on [Ultralytics](https://github.com/ultralytics/ultralytic
 ## 🚀 TL;DR quickstart 🚀
 
 
-### Create the environment
+### Installation
 
-Create the environment:
-
+```bash
+cd /path/to/TinyissimoYOLO
+uv sync
 ```
+
+Or with pip:
+
+```bash
 python3.10 -m venv venv
 source venv/bin/activate
-pip install torch==2.0.0+cu117 torchvision==0.15.1+cu117 torchaudio==2.0.1 --index-url https://download.pytorch.org/whl/cu117 
-pip install -r requirements.txt 
+pip install torch==2.0.0+cu117 torchvision==0.15.1+cu117 torchaudio==2.0.1 --index-url https://download.pytorch.org/whl/cu117
+pip install -r requirements.txt
 ```
 
 
 
 ## Training & Evaluation
 
-
-```
-python a_train_export.py
+```bash
+uv run tinyissimo export
 ```
 

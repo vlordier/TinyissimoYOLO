@@ -1,0 +1,115 @@
+[project]
+name = "tinyissimo-yolo"
+version = "0.1.0"
+description = "TinyissimoYOLO — ultra-lightweight YOLO for edge deployment"
+requires-python = ">=3.9"
+dependencies = [
+    "matplotlib>=3.2.2",
+    "opencv-python>=4.6.0",
+    "Pillow>=7.1.2",
+    "PyYAML>=5.3.1",
+    "requests>=2.23.0",
+    "scipy>=1.4.1",
+    "torch>=1.7.0",
+    "torchvision>=0.8.1",
+    "tqdm>=4.64.0",
+    "wandb",
+    "pandas>=1.1.4",
+    "seaborn>=0.11.0",
+    "psutil",
+    "ultralytics",
+]
+
+[tool.uv.sources]
+ultralytics = { path = "./ultralytics", editable = true }
+
+[project.scripts]
+tinyissimo = "tinyissimo_yolo.__main__:main"
+tinyissimo-train = "tinyissimo_yolo.cli.train:main"
+tinyissimo-evaluate = "tinyissimo_yolo.cli.evaluate:main"
+tinyissimo-convert-dataset = "tinyissimo_yolo.cli.convert_dataset:main"
+tinyissimo-train-export = "tinyissimo_yolo.cli.train_export:main"
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages]
+find = { namespaces = true, where = ["src"] }
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[dependency-groups]
+dev = ["pytest>=7", "mypy>=1", "pytest-cov>=6"]
+
+[tool.pytest.ini_options]
+minversion = "7"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short --cov=src/tinyissimo_yolo --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["src/tinyissimo_yolo"]
+omit = ["*/tests/*", "*/ultralytics/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "if __name__ == .__main__.:",
+    "pragma: no cover",
+    "type: ignore",
+]
+
+[tool.uv]
+package = true
+
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+exclude = ["ultralytics/"]
+extend-exclude = []
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "I", "W",      # pycodestyle + pyflakes + isort
+    "UP",                     # pyupgrade
+    "N",                      # naming
+    "SIM",                    # simplify
+    "PERF",                   # performance
+    "RET",                    # return
+    "ARG",                    # unused arguments
+    "C4",                     # comprehensions
+    "ISC",                    # implicit string concat
+    "PIE",                    # misc
+    "RUF",                    # ruff-specific
+    "S",                      # flake8-bandit (security)
+    "T20",                    # flake8-print (no print)
+    "ASYNC",                  # flake8-async
+    "T10",                    # flake8-debugger (no pdb)
+]
+ignore = [
+    "E501",                   # line-length handled by formatter
+    "RUF012",                 # mutable class vars — not applicable here
+    "ARG001",                 # unused function args — allow callbacks
+    "S101",                   # allow assert in non-test code
+    "S310",                   # allow urlopen with hardcoded trusted URLs
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ARG001", "PERF", "SIM108"]
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.13"
+strict = false
+check_untyped_defs = true
+ignore_missing_imports = true
+namespace_packages = true
+
+[[tool.mypy.overrides]]
+module = "ultralytics.*"
+ignore_errors = true
